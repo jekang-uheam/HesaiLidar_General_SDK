@@ -587,7 +587,7 @@ void PandarGeneral_Internal::Init() {
     }
   }
 
-  SetEnvironmentVariableTZ();
+  // SetEnvironmentVariableTZ();
 }
 
 /**
