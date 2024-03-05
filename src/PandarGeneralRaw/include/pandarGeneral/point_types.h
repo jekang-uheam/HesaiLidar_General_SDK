@@ -38,15 +38,15 @@ typedef pcl::PointCloud<PPoint> PPointCloud;
 struct PointXYZIRAT {
   PCL_ADD_POINT4D
   float intensity;
+  double timestamp;
   uint16_t ring;
   uint16_t angle;
-  double timestamp;
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(
     PointXYZIRAT,
-    (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(uint16_t, ring, ring)(uint16_t, angle, angle)(double, timestamp, timestamp))
+    (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(double, timestamp, timestamp)(uint16_t, ring, ring)(uint16_t, angle, angle))
 
 typedef PointXYZIRAT SVPoint;
 typedef pcl::PointCloud<SVPoint> SVPointCloud;

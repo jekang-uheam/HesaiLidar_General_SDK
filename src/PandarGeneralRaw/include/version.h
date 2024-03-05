@@ -23,6 +23,7 @@
 #include <string>
 
 #define VERSION "PandarGeneralSDK_1.1.15"
+#define SV_VERSION "2.0 (SURF 2.0.26)"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,8 +32,9 @@ void printVersion() {
   printf(
       "       ///////////////////////////////////////////////////////////////\n"
       "       //     PandarGeneralSDK version: %s      //\n"
+      "       //     SV version: %s                         //\n"
       "       ///////////////////////////////////////////////////////////////\n",
-      VERSION);
+      VERSION, SV_VERSION);
 }
 
 #ifdef __cplusplus
