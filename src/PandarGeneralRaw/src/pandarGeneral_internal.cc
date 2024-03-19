@@ -805,8 +805,23 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
                start_angle_ <= pkt.blocks[i].azimuth) ||
               (last_azimuth_ < start_angle_ &&
                start_angle_ <= pkt.blocks[i].azimuth)) {
+            /* 2024-03-19 ver2.1
             if (pcl_callback_ && (m_iPointCloudIndex > 0 || m_vPointCloudList[0].size() > 0)) {
               EmitBackMessege(LASER_COUNT, outMsg);
+            }
+            */
+            if (pcl_callback_) {
+              if (m_iPointCloudIndex > 0) {
+                EmitBackMessege(LASER_COUNT, outMsg);
+              } else {
+                for (int ring = 0; i < LASER_COUNT; ++i) {
+                  if (m_vPointCloudList[ring].size() == 0) {
+                    continue;
+                  }
+                  EmitBackMessege(LASER_COUNT, outMsg);
+                  break;
+                }
+              }
             }
           }
         }
@@ -841,8 +856,23 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
                start_angle_ <= pkt.blocks[i].azimuth) ||
               (last_azimuth_ < start_angle_ &&
                start_angle_ <= pkt.blocks[i].azimuth)) {
+            /* 2024-03-19 ver2.1
             if (pcl_callback_ && (m_iPointCloudIndex > 0 || m_vPointCloudList[0].size() > 0)) {
               EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+            }
+            */
+            if (pcl_callback_) {
+              if (m_iPointCloudIndex > 0) {
+                EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+              } else {
+                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                  if (m_vPointCloudList[ring].size() == 0) {
+                    continue;
+                  }
+                  EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+                  break;
+                }
+              }
             }
           }
         } else {
@@ -877,8 +907,23 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
                start_angle_ <= pkt.blocks[i].azimuth) ||
               (last_azimuth_ < start_angle_ &&
                start_angle_ <= pkt.blocks[i].azimuth)) {
+            /* 2024-03-19 ver2.1
             if (pcl_callback_ && (m_iPointCloudIndex > 0 || m_vPointCloudList[0].size() > 0)) {
               EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+            }
+            */
+            if (pcl_callback_) {
+              if (m_iPointCloudIndex > 0) {
+                EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+              } else {
+                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                  if (m_vPointCloudList[ring].size() == 0) {
+                    continue;
+                  }
+                  EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+                  break;
+                }
+              }
             }
           }
         } else {
@@ -912,8 +957,36 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
                start_angle_ <= pkt.blocks[i].azimuth) ||
               (last_azimuth_ < start_angle_ &&
                start_angle_ <= pkt.blocks[i].azimuth)) {
+            /* 2024-03-19 ver2.1
             if (pcl_callback_ && (m_iPointCloudIndex > 0 || m_vPointCloudList[0].size() > 0)) {
               EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+            }
+            */
+            if (pcl_callback_) {
+              if (m_iPointCloudIndex > 0) {
+                EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+              } else {
+                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                  if (m_vPointCloudList[ring].size() == 0) {
+                    continue;
+                  }
+                  EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+                  break;
+                }
+              }
+            }
+            if (pcl_callback_) {
+              if (m_iPointCloudIndex > 0) {
+                EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+              } else {
+                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                  if (m_vPointCloudList[ring].size() == 0) {
+                    continue;
+                  }
+                  EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+                  break;
+                }
+              }
             }
           }
         } else {
@@ -948,8 +1021,23 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
                start_angle_ <= pkt.blocks[i].azimuth) ||
               (last_azimuth_ < start_angle_ &&
                start_angle_ <= pkt.blocks[i].azimuth)) {
+            /* 2024-03-19 ver2.1
             if (pcl_callback_ && (m_iPointCloudIndex > 0 || m_vPointCloudList[0].size() > 0)) {
               EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+            }
+            */
+            if (pcl_callback_) {
+              if (m_iPointCloudIndex > 0) {
+                EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+              } else {
+                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                  if (m_vPointCloudList[ring].size() == 0) {
+                    continue;
+                  }
+                  EmitBackMessege(pkt.header.chLaserNumber, outMsg);
+                  break;
+                }
+              }
             }
           }
         } else {

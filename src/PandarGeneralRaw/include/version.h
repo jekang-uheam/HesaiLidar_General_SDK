@@ -23,7 +23,7 @@
 #include <string>
 
 #define VERSION "PandarGeneralSDK_1.1.15"
-#define SV_VERSION "2.0 (SURF 2.0.26)"
+#define SV_VERSION "2.1"
 #ifdef __cplusplus
 extern "C" {
 #endif
