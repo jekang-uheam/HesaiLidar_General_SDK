@@ -814,7 +814,7 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
               if (m_iPointCloudIndex > 0) {
                 EmitBackMessege(LASER_COUNT, outMsg);
               } else {
-                for (int ring = 0; i < LASER_COUNT; ++i) {
+                for (int ring = 0; ring < LASER_COUNT; ++ring) {
                   if (m_vPointCloudList[ring].size() == 0) {
                     continue;
                   }
@@ -865,7 +865,7 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
               if (m_iPointCloudIndex > 0) {
                 EmitBackMessege(pkt.header.chLaserNumber, outMsg);
               } else {
-                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                for (int ring = 0; ring < pkt.header.chLaserNumber; ++ring) {
                   if (m_vPointCloudList[ring].size() == 0) {
                     continue;
                   }
@@ -916,7 +916,7 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
               if (m_iPointCloudIndex > 0) {
                 EmitBackMessege(pkt.header.chLaserNumber, outMsg);
               } else {
-                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                for (int ring = 0; ring < pkt.header.chLaserNumber; ++ring) {
                   if (m_vPointCloudList[ring].size() == 0) {
                     continue;
                   }
@@ -966,7 +966,7 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
               if (m_iPointCloudIndex > 0) {
                 EmitBackMessege(pkt.header.chLaserNumber, outMsg);
               } else {
-                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                for (int ring = 0; ring < pkt.header.chLaserNumber; ++ring) {
                   if (m_vPointCloudList[ring].size() == 0) {
                     continue;
                   }
@@ -979,7 +979,7 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
               if (m_iPointCloudIndex > 0) {
                 EmitBackMessege(pkt.header.chLaserNumber, outMsg);
               } else {
-                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                for (int ring = 0; ring < pkt.header.chLaserNumber; ++ring) {
                   if (m_vPointCloudList[ring].size() == 0) {
                     continue;
                   }
@@ -1030,7 +1030,7 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
               if (m_iPointCloudIndex > 0) {
                 EmitBackMessege(pkt.header.chLaserNumber, outMsg);
               } else {
-                for (int ring = 0; i < pkt.header.chLaserNumber; ++i) {
+                for (int ring = 0; ring < pkt.header.chLaserNumber; ++ring) {
                   if (m_vPointCloudList[ring].size() == 0) {
                     continue;
                   }
