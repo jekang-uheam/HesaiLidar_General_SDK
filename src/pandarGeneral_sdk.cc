@@ -25,7 +25,7 @@
 
 PandarGeneralSDK::PandarGeneralSDK(
     std::string device_ip, const uint16_t lidar_port, uint16_t lidar_algorithm_port, uint16_t gps_port,
-    boost::function<void(boost::shared_ptr<PPointCloud>, double)>pcl_callback,
+    boost::function<void(boost::shared_ptr<SVPointCloud>, double)> pcl_callback,
     boost::function<void(HS_Object3D_Object_List*)> algorithm_callback,
     boost::function<void(double)> gps_callback, uint16_t start_angle,
     int tz, int pcl_type, std::string lidar_type, std::string frame_id, std::string timestampType,
@@ -48,10 +48,10 @@ PandarGeneralSDK::PandarGeneralSDK(
   correction_file_path_ = lidar_correction_file;
 }
 
-PandarGeneralSDK::PandarGeneralSDK(\
-    std::string pcap_path, \
-    boost::function<void(boost::shared_ptr<PPointCloud>, double)> pcl_callback, \
-    uint16_t start_angle, int tz, int pcl_type, std::string lidar_type, std::string frame_id, \
+PandarGeneralSDK::PandarGeneralSDK(
+    std::string pcap_path,
+    boost::function<void(boost::shared_ptr<SVPointCloud>, double)> pcl_callback,
+    uint16_t start_angle, int tz, int pcl_type, std::string lidar_type, std::string frame_id,
     std::string timestampType, bool coordinate_correction_flag) {
   printVersion();
   pandarGeneral_ = NULL;
@@ -172,12 +172,14 @@ void PandarGeneralSDK::GetCalibrationFromDevice() {
 
 int PandarGeneralSDK::getMajorVersion() {
   if (pandarGeneral_) {
-    pandarGeneral_->getMajorVersion();
+    return pandarGeneral_->getMajorVersion();
   }
+  return 0;
 }
 
 int PandarGeneralSDK::getMinorVersion() {
   if (pandarGeneral_) {
-    pandarGeneral_->getMinorVersion();
+    return pandarGeneral_->getMinorVersion();
   }
+  return 0;
 }

@@ -20,20 +20,19 @@ void gpsCallback(double timestamp) {
         printf("gps: %lf\n", timestamp);   
 }
 
-void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp) {
-    if(printFlag == 1)       
-        printf("timestamp: %lf,point_size: %ld\n", timestamp, cld->points.size());
-    if(pcdFileWriteFlag == 1) {
-        frameItem++;
-        if(saveFrameIndex == frameItem) {
-            int Num = cld->points.size();                           
-            std::ofstream zos(saveFileName);
-            for (int i = 0; i < Num; i++)                             
-            {
-                zos <<  cld->points[i].x << "," << cld->points[i].y << "," << cld->points[i].z << "," << cld->points[i].intensity << "," << cld->points[i].timestamp << "," << cld->points[i].ring << std::endl;
-            }
-        }
-    }         
+void lidarCallback(boost::shared_ptr<SVPointCloud> cld, double timestamp) {
+  if (printFlag == 1)
+    printf("timestamp: %lf,point_size: %ld\n", timestamp, cld->points.size());
+  if (pcdFileWriteFlag == 1) {
+    frameItem++;
+    if (saveFrameIndex == frameItem) {
+      int Num = cld->points.size();
+      std::ofstream zos(saveFileName);
+      for (int i = 0; i < Num; i++) {
+        zos << cld->points[i].x << "," << cld->points[i].y << "," << cld->points[i].z << "," << cld->points[i].intensity << "," << cld->points[i].timestamp << "," << cld->points[i].ring << std::endl;
+      }
+    }
+  }
 }
 
 void lidarAlgorithmCallback(HS_Object3D_Object_List* object_t) {

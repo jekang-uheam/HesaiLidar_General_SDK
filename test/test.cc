@@ -52,8 +52,8 @@ void lidarAlgorithmCallback(HS_Object3D_Object_List* object_t) {
 }
 
 int main(int argc, char** argv) {
-  PandarGeneralSDK pandarGeneral(std::string("192.168.1.201"), 2368, 0, 10110, \
-      lidarCallback, lidarAlgorithmCallback, gpsCallback, 0, 0, 0, std::string("PandarXT-32"), std::string("frame_id"), "", "", "", false);
+  // PandarGeneralSDK pandarGeneral(std::string("192.168.1.201"), 2368, 0, 10110, \
+  //     lidarCallback, lidarAlgorithmCallback, gpsCallback, 0, 0, 0, std::string("PandarXT-32"), std::string("frame_id"), "", "", "", false);
 
   // PandarGeneralSDK pandarGeneral(std::string("/path/to/pcapFile"), \
   // lidarCallback, 0, 0, 1, std::string("PandarXT-16"), "", "", false);
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
   //   std::cout << "Open correction file " << filePath << " failed" << std::endl;
   // }
 
-  pandarGeneral.Start();
+  // pandarGeneral.Start();
 
   while (true) {
     sleep(100);

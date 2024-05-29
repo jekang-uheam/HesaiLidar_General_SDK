@@ -28,7 +28,7 @@
  */
 PandarGeneral::PandarGeneral(
     std::string device_ip, uint16_t lidar_port, uint16_t lidar_algorithm_port, uint16_t gps_port,
-    boost::function<void(boost::shared_ptr<PPointCloud>, double)> pcl_callback,
+    boost::function<void(boost::shared_ptr<SVPointCloud>, double)> pcl_callback,
     boost::function<void(HS_Object3D_Object_List*)> algorithm_callback,
     boost::function<void(double)> gps_callback, uint16_t start_angle, int tz,
     int pcl_type, std::string lidar_type, std::string frame_id, std::string timestampType,
@@ -48,11 +48,11 @@ PandarGeneral::PandarGeneral(
  *        frame_id          The frame id of point cloud
  */
 PandarGeneral::PandarGeneral(
-    std::string pcap_path, \
-    boost::function<void(boost::shared_ptr<PPointCloud>, double)> pcl_callback,\
-    uint16_t start_angle, int tz, int pcl_type, std::string lidar_type, std::string frame_id, \
+    std::string pcap_path,
+    boost::function<void(boost::shared_ptr<SVPointCloud>, double)> pcl_callback,
+    uint16_t start_angle, int tz, int pcl_type, std::string lidar_type, std::string frame_id,
     std::string timestampType, bool coordinate_correction_flag) {
-  internal_ = new PandarGeneral_Internal(pcap_path, pcl_callback, start_angle, \
+  internal_ = new PandarGeneral_Internal(pcap_path, pcl_callback, start_angle,
       tz, pcl_type, lidar_type, frame_id, timestampType, coordinate_correction_flag);
 }
 
@@ -89,20 +89,23 @@ void PandarGeneral::Stop() { internal_->Stop(); }
 
 int PandarGeneral::getMajorVersion() {
   if (internal_) {
-    internal_->getMajorVersion();
+    return internal_->getMajorVersion();
   }
+  return 0;
 }
 
 int PandarGeneral::getMinorVersion() {
   if (internal_) {
-    internal_->getMinorVersion();
+    return internal_->getMinorVersion();
   }
+  return 0;
 }
 
-bool PandarGeneral::GetCorrectionFileFlag(){
+bool PandarGeneral::GetCorrectionFileFlag() {
   if (internal_) {
     return internal_->GetCorrectionFileFlag();
   }
+  return false;
 }
 
 void PandarGeneral::SetCorrectionFileFlag(bool flag){
