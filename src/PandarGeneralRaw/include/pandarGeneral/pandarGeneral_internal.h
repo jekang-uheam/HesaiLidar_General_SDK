@@ -360,9 +360,9 @@ typedef struct PacketsBuffer_s {
       return 0;
     }
     if (((m_iterPush - m_iterCalc) > MAX_ITERATOR_DIFF) ||
-        ((m_iterPush < m_iterCalc) && (m_iterCalc - m_iterPush) < m_buffers.size() - MAX_ITERATOR_DIFF)) {
+        ((m_iterPush < m_iterCalc) && (m_iterCalc - m_iterPush) < static_cast<int64_t>(m_buffers.size() - MAX_ITERATOR_DIFF))) {
       while ((((m_iterPush - m_iterCalc) > MAX_ITERATOR_DIFF) ||
-              ((m_iterPush < m_iterCalc) && (m_iterCalc - m_iterPush) < m_buffers.size() - MAX_ITERATOR_DIFF)))
+              ((m_iterPush < m_iterCalc) && (m_iterCalc - m_iterPush) < static_cast<int64_t>(m_buffers.size() - MAX_ITERATOR_DIFF))))
         usleep(1000);
     }
 
