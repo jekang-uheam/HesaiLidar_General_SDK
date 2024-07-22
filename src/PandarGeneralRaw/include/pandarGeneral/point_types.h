@@ -44,11 +44,21 @@ struct PointXYZIRAT {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 } EIGEN_ALIGN16;
 
+typedef struct SVPoint_s {
+  float x;
+  float y;
+  float z;
+  float intensity;
+  double timestamp;
+  std::uint16_t ring;
+  std::uint16_t angle;
+} __attribute__((__packed__)) SVPoint_t;
+
 POINT_CLOUD_REGISTER_POINT_STRUCT(
     PointXYZIRAT,
     (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)(double, timestamp, timestamp)(std::uint16_t, ring, ring)(std::uint16_t, angle, angle))
 
 typedef PointXYZIRAT SVPoint;
-typedef pcl::PointCloud<SVPoint> SVPointCloud;
+typedef pcl::PointCloud<SVPoint_t> SVPointCloud;
 
 #endif  // INCLUDE_POINT_TYPES_H_

@@ -48,7 +48,7 @@ class PandarGeneral {
                 boost::function<void(HS_Object3D_Object_List *)> algorithm_callback,
                 boost::function<void(double)> gps_callback, uint16_t start_angle,
                 int tz, int pcl_type, std::string lidar_type, std::string frame_id, std::string timestampType,  // the default timestamp type is LiDAR time
-                std::string lidar_correction_file, std::string multicast_ip, bool coordinate_correction_flag);
+                std::string lidar_correction_file, std::string lidar_firetimes_file, std::string multicast_ip, bool coordinate_correction_flag, bool firetimes_correction_flag);
   /**
    * @brief Constructor
    * @param pcap_path         The path of pcap file
@@ -61,7 +61,7 @@ class PandarGeneral {
   PandarGeneral(std::string pcap_path,
                 boost::function<void(boost::shared_ptr<SVPointCloud>, double)> pcl_callback,
                 uint16_t start_angle, int tz, int pcl_type, std::string lidar_type, std::string frame_id,
-                std::string timestampType, bool coordinate_correction_flag);  // the default timestamp type is LiDAR time
+                std::string timestampType, bool coordinate_correction_flag, bool firetimes_correction_flag);  // the default timestamp type is LiDAR time
 
   /**
    * @brief deconstructor
@@ -74,6 +74,7 @@ class PandarGeneral {
    */
   int LoadCorrectionFile(std::string contents);
 
+  int LoadFiretimesFile(std::string contents);
   /**
    * @brief Reset Lidar's start angle.
    * @param angle The start angle
@@ -103,6 +104,9 @@ class PandarGeneral {
 
   bool GetCorrectionFileFlag();
   void SetCorrectionFileFlag(bool flag);
+
+  bool GetFiretimesFileFlag();
+  void SetFiretimesFileFlag(bool flag);
 
  private:
   PandarGeneral_Internal *internal_;

@@ -27,10 +27,13 @@
 #include <string>
 
 #include "input.h"
+#include "packet_pandar128.h"
+#include "packet_pandar64.h"
 #include "pandarGeneral/point_types.h"
 #include "pandarQT.h"
 #include "pandarXT.h"
 #include "pcap_reader.h"
+
 #define MAX_ITERATOR_DIFF (400)
 #define SOB_ANGLE_SIZE (4)
 #define RAW_MEASURE_SIZE (3)
@@ -148,6 +151,13 @@
 #define HS_LIDAR_QT_COORDINATE_CORRECTION_S0 (0.00017)
 #define HS_LIDAR_QT_COORDINATE_CORRECTION_D0 (20)
 #define COORDINATE_CORRECTION_CHECK (false)
+
+struct FiretimeSectionValues {
+  struct SectionValue {
+    std::array<int, 2> firetime;
+  };
+  std::array<SectionValue, 8> section_values;
+};
 
 struct Pandar40PUnit_s {
   uint8_t intensity;
@@ -404,7 +414,7 @@ class PandarGeneral_Internal {
       boost::function<void(HS_Object3D_Object_List *)> algorithm_callback,
       boost::function<void(double)> gps_callback,
       uint16_t start_angle, int tz, int pcl_type, std::string lidar_type, std::string frame_id, std::string timestampType,
-      std::string lidar_correction_file, std::string multicast_ip, bool coordinate_correction_flag);
+      std::string lidar_correction_file, std::string lidar_firetimes_file, std::string multicast_ip, bool coordinate_correction_flag, bool firetimes_correction_flag);
 
   /**
    * @brief Constructor
@@ -417,18 +427,19 @@ class PandarGeneral_Internal {
    */
   PandarGeneral_Internal(
       std::string pcap_path,
-      boost::function<void(boost::shared_ptr<SVPointCloud>, double)>
-          pcl_callback,
+      boost::function<void(boost::shared_ptr<SVPointCloud>, double)> pcl_callback,
       uint16_t start_angle, int tz, int pcl_type,
-      std::string lidar_type, std::string frame_id, std::string timestampType, bool coordinate_correction_flag);  // the default timestamp type is LiDAR time
+      std::string lidar_type, std::string frame_id, 
+      std::string timestampType, bool coordinate_correction_flag, bool firetimes_correction_flag);  // the default timestamp type is LiDAR time
   ~PandarGeneral_Internal();
 
   /**
    * @brief load the correction file
    * @param correction The path of correction file
    */
-  int LoadCorrectionFile(std::string correction);
+  int LoadCorrectionFile(std::string correction_content);
 
+int LoadFiretimesFile(std::string firetimes_path);
   /**
    * @brief load the correction file
    * @param angle The start angle
@@ -439,6 +450,9 @@ class PandarGeneral_Internal {
   void Stop();
   bool GetCorrectionFileFlag();
   void SetCorrectionFileFlag(bool flag);
+
+  bool GetFiretimesFileFlag();
+  void SetFiretimesFileFlag(bool flag);
 
   /*
   @Description：Udp byte stream analysis function
@@ -524,6 +538,12 @@ class PandarGeneral_Internal {
 
   void EmitBackMessege(char chLaserNumber, boost::shared_ptr<SVPointCloud> cld);
   void SetEnvironmentVariableTZ();
+
+  int ParseSV64Data(HS_LIDAR_64CH_PACKET_t *output, const uint8_t *buffer, const int len);
+  int ParseSV128Data(HS_LIDAR_128CH_PACKET_t *output, const uint8_t *buffer, const int len);
+  void Calc64SVPoint(HS_LIDAR_64CH_PACKET_t *packet, int block_index, uint8_t laser_number);
+  void Calc128SVPoint(HS_LIDAR_128CH_PACKET_t *packet, int block_index, uint8_t laser_number);
+
   pthread_mutex_t lidar_lock_;
   sem_t lidar_sem_;
   boost::thread *lidar_recv_thr_;
@@ -581,6 +601,12 @@ class PandarGeneral_Internal {
   float block64OffsetDual_[HS_LIDAR_L64_BLOCK_NUMBER_6];
   float laser64Offset_[HS_LIDAR_L64_UNIT_NUM];
 
+  std::vector<float> block_offset_128_single_standard_;
+  std::vector<float> block_offset_128_single_high_resolution_;
+  float block_offset_128_dual_;
+
+  std::array<FiretimeSectionValues, 128> firetime_128ch_section_values_;
+
   float block40OffsetSingle_[BLOCKS_PER_PACKET];
   float block40OffsetDual_[BLOCKS_PER_PACKET];
   float laser40Offset_[LASER_COUNT];
@@ -615,12 +641,16 @@ class PandarGeneral_Internal {
   std::vector<float> m_cos_azimuth_map_b;
   bool got_lidar_correction_flag;
   std::string correction_file_path_;
+  bool got_lidar_firetimes_flag;
+  std::string firetimes_file_path_;
   PacketsBuffer m_PacketsBuffer;
   bool m_bCoordinateCorrectionFlag;
+  bool m_bFiretimesCorrectionFlag;
   uint16_t m_iAzimuthRange;
   int m_iPointCloudIndex;
-  std::vector<std::vector<SVPoint> > m_vPointCloudList;
-  std::vector<SVPoint> m_vPointCloud;
+  std::vector<std::vector<SVPoint_t>> m_vPointCloudList;
+  std::vector<SVPoint_t> m_vPointCloud;
+  double section_distance_;
 };
 
 #endif  // SRC_PANDARGENERAL_INTERNAL_H_

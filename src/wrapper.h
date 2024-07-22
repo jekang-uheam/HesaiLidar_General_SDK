@@ -1,3 +1,6 @@
+#ifndef WRAPPER_H_
+#define WRAPPER_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -10,3 +13,5 @@ void SetPrintFlag(int flag);
 #ifdef __cplusplus
 };
 #endif
+
+#endif  // WRAPPER_H_

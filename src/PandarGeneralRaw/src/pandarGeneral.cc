@@ -33,11 +33,11 @@ PandarGeneral::PandarGeneral(
     boost::function<void(HS_Object3D_Object_List*)> algorithm_callback,
     boost::function<void(double)> gps_callback, uint16_t start_angle, int tz,
     int pcl_type, std::string lidar_type, std::string frame_id, std::string timestampType,
-    std::string lidar_correction_file, std::string multicast_ip, bool coordinate_correction_flag) {
+    std::string lidar_correction_file, std::string lidar_firetimes_file, std::string multicast_ip, bool coordinate_correction_flag, bool firetimes_correction_flag) {
   // LOG_FUNC();
   internal_ =
       new PandarGeneral_Internal(device_ip, lidar_port, lidar_algorithm_port, gps_port, pcl_callback, algorithm_callback,
-                                 gps_callback, start_angle, tz, pcl_type, lidar_type, frame_id, timestampType, lidar_correction_file, multicast_ip, coordinate_correction_flag);
+                                 gps_callback, start_angle, tz, pcl_type, lidar_type, frame_id, timestampType, lidar_correction_file, lidar_firetimes_file, multicast_ip, coordinate_correction_flag, firetimes_correction_flag);
 }
 
 /**
@@ -52,9 +52,9 @@ PandarGeneral::PandarGeneral(
     std::string pcap_path,
     boost::function<void(boost::shared_ptr<SVPointCloud>, double)> pcl_callback,
     uint16_t start_angle, int tz, int pcl_type, std::string lidar_type, std::string frame_id,
-    std::string timestampType, bool coordinate_correction_flag) {
+    std::string timestampType, bool coordinate_correction_flag, bool firetimes_correction_flag) {
   internal_ = new PandarGeneral_Internal(pcap_path, pcl_callback, start_angle,
-                                         tz, pcl_type, lidar_type, frame_id, timestampType, coordinate_correction_flag);
+                                         tz, pcl_type, lidar_type, frame_id, timestampType, coordinate_correction_flag, firetimes_correction_flag);
 }
 
 /**
@@ -68,6 +68,10 @@ PandarGeneral::~PandarGeneral() { delete internal_; }
  */
 int PandarGeneral::LoadCorrectionFile(std::string file) {
   return internal_->LoadCorrectionFile(file);
+}
+
+int PandarGeneral::LoadFiretimesFile(std::string file) {
+  return internal_->LoadFiretimesFile(file);
 }
 
 /**
@@ -112,5 +116,18 @@ bool PandarGeneral::GetCorrectionFileFlag() {
 void PandarGeneral::SetCorrectionFileFlag(bool flag) {
   if (internal_) {
     internal_->SetCorrectionFileFlag(flag);
+  }
+}
+
+bool PandarGeneral::GetFiretimesFileFlag() {
+  if (internal_) {
+    return internal_->GetFiretimesFileFlag();
+  }
+  return false;
+}
+
+void PandarGeneral::SetFiretimesFileFlag(bool flag) {
+  if (internal_) {
+    internal_->SetFiretimesFileFlag(flag);
   }
 }

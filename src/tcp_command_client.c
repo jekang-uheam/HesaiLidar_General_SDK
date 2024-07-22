@@ -348,3 +348,37 @@ PTC_ErrCode TcpCommandResetCalibration(const void* handle) {
 }
 
 void TcpCommandClientDestroy(const void* handle) {}
+
+
+PTC_ErrCode TcpCommandGetLidarFiretimes(const void* handle, char** buffer,
+                                          unsigned int* len) {
+printf("buffer is: %s,len is: %d\n", (*buffer), (*len));
+  if (!handle || !buffer || !len) {
+    printf("Bad Parameter!!!\n");
+    return PTC_ERROR_BAD_PARAMETER;
+  }
+  TcpCommandClient* client = (TcpCommandClient*)handle;
+
+  TC_Command cmd;
+  memset(&cmd, 0, sizeof(TC_Command));
+  cmd.header.cmd = PTC_COMMOND_GET_LIDAR_FIRETIMES;
+  cmd.header.len = 0;
+  cmd.data = NULL;
+
+  PTC_ErrCode errorCode = tcpCommandClient_SendCmd(client, &cmd);
+  if (errorCode != PTC_ERROR_NO_ERROR) {
+    return errorCode;
+  }
+
+  char* ret_str = (char*)malloc(cmd.ret_size + 1);
+  memcpy(ret_str, cmd.ret_data, cmd.ret_size);
+  ret_str[cmd.ret_size] = '\0';
+
+  free(cmd.ret_data);
+
+  *buffer = ret_str;
+  *len = cmd.ret_size + 1;
+
+  return cmd.header.ret_code;
+
+}

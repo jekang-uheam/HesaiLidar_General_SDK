@@ -53,7 +53,7 @@ void lidarAlgorithmCallback(HS_Object3D_Object_List* object_t) {
 
 void RunPcapPandarGeneralSDK(char* correctionFile, char* pcapFile, char* lidarType, char* timestampType, int runTime) {
   PandarGeneralSDK pandarGeneral(pcapFile,
-                                 lidarCallback, 0, 0, 1, lidarType, "", timestampType, true);
+                                 lidarCallback, 0, 0, 1, lidarType, "", "", timestampType, true);
   std::string filePath = correctionFile;
   std::ifstream fin(filePath);
   if (fin.is_open()) {
@@ -82,7 +82,7 @@ void RunPcapPandarGeneralSDK(char* correctionFile, char* pcapFile, char* lidarTy
 void RunLidarPandarGeneralSDK(char* deviceipaddr, int lidarport, int gpsport, char* correctionfile, char* lidarType, char* timestampType,
                               char* multiCastIp, int runTime) {
   PandarGeneralSDK pandarGeneral(deviceipaddr, lidarport, 0, gpsport,
-                                 lidarCallback, lidarAlgorithmCallback, gpsCallback, 0, 0, 1, lidarType, std::string("frame_id"), timestampType, correctionfile, multiCastIp, false);
+                                 lidarCallback, lidarAlgorithmCallback, gpsCallback, 0, 0, 1, lidarType, std::string("frame_id"), timestampType, correctionfile, "", multiCastIp, false, false);
   pandarGeneral.Start();
   sleep(runTime);
   return;

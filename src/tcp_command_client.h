@@ -27,7 +27,8 @@ typedef enum {
   PTC_COMMAND_HEARTBEAT,
   PTC_COMMAND_RESET_CALIBRATION,
   PTC_COMMAND_TEST,
-  PTC_COMMAND_GET_LIDAR_CALIBRATION,
+  PTC_COMMAND_GET_LIDAR_CALIBRATION = 0x05,
+  PTC_COMMOND_GET_LIDAR_FIRETIMES = 0xA9
 } PTC_COMMAND;
 
 typedef enum {
@@ -61,6 +62,9 @@ PTC_ErrCode TcpCommandGetLidarCalibration(const void* handle, char** buffer,
                                           unsigned int* len);
 PTC_ErrCode TcpCommandResetCalibration(const void* handle);
 void TcpCommandClientDestroy(const void* handle);
+
+PTC_ErrCode TcpCommandGetLidarFiretimes(const void* handle, char** buffer,
+                                          unsigned int* len);
 
 #ifdef __cplusplus
 }

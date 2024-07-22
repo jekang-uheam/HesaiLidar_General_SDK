@@ -31,13 +31,13 @@ PandarGeneralSDK::PandarGeneralSDK(
     boost::function<void(HS_Object3D_Object_List *)> algorithm_callback,
     boost::function<void(double)> gps_callback, uint16_t start_angle,
     int tz, int pcl_type, std::string lidar_type, std::string frame_id, std::string timestampType,
-    std::string lidar_correction_file, std::string multicast_ip, bool coordinate_correction_flag) {
+    std::string lidar_correction_file, std::string lidar_firetimes_file, std::string multicast_ip, bool coordinate_correction_flag, bool firetimes_correction_flag) {
   printVersion();
   pandarGeneral_ = NULL;
   // LOG_FUNC();
 
   pandarGeneral_ = new PandarGeneral(device_ip, lidar_port, lidar_algorithm_port,
-                                     gps_port, pcl_callback, algorithm_callback, gps_callback, start_angle, tz, pcl_type, lidar_type, frame_id, timestampType, lidar_correction_file, multicast_ip, coordinate_correction_flag);
+                                     gps_port, pcl_callback, algorithm_callback, gps_callback, start_angle, tz, pcl_type, lidar_type, frame_id, timestampType, lidar_correction_file, lidar_firetimes_file, multicast_ip, coordinate_correction_flag, firetimes_correction_flag);
 
   tcp_command_client_ =
       TcpCommandClientNew(device_ip.c_str(), PANDARGENERALSDK_TCP_COMMAND_PORT);
@@ -48,18 +48,19 @@ PandarGeneralSDK::PandarGeneralSDK(
   enable_get_calibration_thr_ = false;
   got_lidar_calibration_ = false;
   correction_file_path_ = lidar_correction_file;
+firetimes_file_path_ = lidar_firetimes_file;
 }
 
 PandarGeneralSDK::PandarGeneralSDK(
     std::string pcap_path,
     boost::function<void(boost::shared_ptr<SVPointCloud>, double)> pcl_callback,
     uint16_t start_angle, int tz, int pcl_type, std::string lidar_type, std::string frame_id,
-    std::string timestampType, bool coordinate_correction_flag) {
+    std::string timestampType, bool coordinate_correction_flag, bool firetimes_correction_flag) {
   printVersion();
   pandarGeneral_ = NULL;
 
   pandarGeneral_ = new PandarGeneral(pcap_path, pcl_callback, start_angle,
-                                     tz, pcl_type, lidar_type, frame_id, timestampType, coordinate_correction_flag);
+                                     tz, pcl_type, lidar_type, frame_id, timestampType, coordinate_correction_flag, firetimes_correction_flag);
 
   get_calibration_thr_ = NULL;
   tcp_command_client_ = NULL;
@@ -129,6 +130,7 @@ void PandarGeneralSDK::GetCalibrationFromDevice() {
   char *buffer = NULL;
   uint32_t len = 0;
 
+// Correction offset
   ret = TcpCommandGetLidarCalibration(tcp_command_client_, &buffer, &len);
   if (ret == 0 && buffer) {
     // success;
@@ -167,6 +169,46 @@ void PandarGeneralSDK::GetCalibrationFromDevice() {
     } else {
       std::cout << "Load correction file from " << correction_file_path_ << " succeed" << std::endl;
       pandarGeneral_->SetCorrectionFileFlag(true);
+    }
+  }
+
+ // Firetimes offset 
+ret = TcpCommandGetLidarFiretimes(tcp_command_client_, &buffer, &len);
+  if (ret == 0 && buffer) {
+    // success;
+    correction_content_ = std::string(buffer);
+    if (pandarGeneral_) {
+      ret = pandarGeneral_->LoadFiretimesFile(correction_content_);
+      if (ret != 0) {
+        std::cout << "Load correction file from lidar failed" << std::endl;
+      } else {
+        std::cout << "Load correction file from lidar succeed" << std::endl;
+      }
+    }
+    free(buffer);
+  }
+  if (!pandarGeneral_->GetFiretimesFileFlag()) {
+    std::ifstream fin(firetimes_file_path_);
+    if (fin.is_open()) {
+      std::cout << "Open correction file " << firetimes_file_path_ << " succeed" << std::endl;
+    } else {
+      std::cout << "Open correction file " << firetimes_file_path_ << " failed" << std::endl;
+      return;
+    }
+    int length = 0;
+    std::string strlidarFiretimes;
+    fin.seekg(0, std::ios::end);
+    length = fin.tellg();
+    fin.seekg(0, std::ios::beg);
+    char *buffer = new char[length];
+    fin.read(buffer, length);
+    fin.close();
+    strlidarFiretimes = buffer;
+    ret = pandarGeneral_->LoadFiretimesFile(strlidarFiretimes);
+    if (ret != 0) {
+      std::cout << "Load correction file from " << correction_file_path_ << " failed" << std::endl;
+    } else {
+      std::cout << "Load correction file from " << correction_file_path_ << " succeed" << std::endl;
     }
   }
 }
