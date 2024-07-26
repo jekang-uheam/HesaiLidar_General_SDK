@@ -429,7 +429,7 @@ class PandarGeneral_Internal {
       std::string pcap_path,
       boost::function<void(boost::shared_ptr<SVPointCloud>, double)> pcl_callback,
       uint16_t start_angle, int tz, int pcl_type,
-      std::string lidar_type, std::string frame_id, 
+      std::string lidar_type, std::string frame_id,
       std::string timestampType, bool coordinate_correction_flag, bool firetimes_correction_flag);  // the default timestamp type is LiDAR time
   ~PandarGeneral_Internal();
 
@@ -439,7 +439,7 @@ class PandarGeneral_Internal {
    */
   int LoadCorrectionFile(std::string correction_content);
 
-int LoadFiretimesFile(std::string firetimes_path);
+  int LoadFiretimesFile(std::string firetimes_path);
   /**
    * @brief load the correction file
    * @param angle The start angle
@@ -536,7 +536,9 @@ int LoadFiretimesFile(std::string firetimes_path);
   float GetFiretimeOffset(float speed, float deltT);
   void FillPacket(const uint8_t *buf, const int len, double timestamp);
 
-  void EmitBackMessege(char chLaserNumber, boost::shared_ptr<SVPointCloud> cld);
+  double GetFiretimesCorrection(int laser_id, double speed, uint8_t opt_mode, uint8_t angle_state, uint16_t dist);
+
+  void EmitBackMessege(uint8_t chLaserNumber, boost::shared_ptr<SVPointCloud> cld);
   void SetEnvironmentVariableTZ();
 
   int ParseSV64Data(HS_LIDAR_64CH_PACKET_t *output, const uint8_t *buffer, const int len);

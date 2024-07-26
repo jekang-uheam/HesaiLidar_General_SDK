@@ -8,7 +8,7 @@
  */
 
 // Head
-#define HS_LIDAR_128CH_PRE_HEADER_SIZE 6
+
 #define HS_LIDAR_128CH_HEADER_SIZE 6
 
 // Body
@@ -26,8 +26,6 @@
 #define HS_LIDAR_128CH_TAIL_SEQ_NUM_SIZE 4
 #define HS_LIDAR_128CH_TAIL_IMU_SIZE 22
 #define HS_LIDAR_128CH_TAIL_CRC_SIZE 4
-
-#define HS_LIDAR_128CH_PACKET_SIZE (HS_LIDAR_128CH_PRE_HEADER_SIZE + HS_LIDAR_128CH_HEADER_SIZE + (HS_LIDAR_128CH_BLOCK_NUM * (HS_LIDAR_128CH_AZIMUTH_SIZE + (HS_LIDAR_128CH_UNIT_NUM * HS_LIDAR_128CH_UNIT_SIZE))) + HS_LIDAR_128CH_BODY_CRC_SIZE + HS_LIDAR_128CH_FUNC_SAFETY_SIZE + HS_LIDAR_128CH_TAIL_INFO_SIZE + HS_LIDAR_128CH_TAIL_SEQ_NUM_SIZE + HS_LIDAR_128CH_TAIL_IMU_SIZE + HS_LIDAR_128CH_TAIL_CRC_SIZE)
 
 typedef struct HS_LIDAR_128CH_PRE_HEADER_s {
   static const uint16_t kDelimiter = 0xffee;
@@ -47,32 +45,38 @@ typedef struct HS_LIDAR_128CH_PRE_HEADER_s {
   // status info version
   static const uint8_t kStatusInfoV0 = 0;
 
-  uint16_t delimiter_;
-  uint8_t version_major_;
-  uint8_t version_minor_;
-  uint8_t status_info_version_;
-  uint8_t reserved_1_;
+  uint16_t m_u16Delimiter;
+  uint8_t m_u8VersionMajor;
+  uint8_t m_u8VersionMinor;
+  uint8_t m_u8StatusInfoVersion;
+  uint8_t m_u8Reserved1;
 
   bool IsValidDelimiter() const {
-    return LittleToNative(delimiter_) == kDelimiter;
+    return LittleToNative(m_u16Delimiter) == kDelimiter;
   }
-  uint8_t GetDelimiter() const { return LittleToNative(delimiter_); }
-  uint8_t GetVersionMajor() const { return version_major_; }
-  uint8_t GetVersionMinor() const { return version_minor_; }
-  uint8_t GetStatusInfoVersion() const { return status_info_version_; }
+  uint8_t GetDelimiter() const { return LittleToNative(m_u16Delimiter); }
+  uint8_t GetVersionMajor() const { return m_u8VersionMajor; }
+  uint8_t GetVersionMinor() const { return m_u8VersionMinor; }
+  uint8_t GetStatusInfoVersion() const { return m_u8StatusInfoVersion; }
 
-  void Init(uint8_t version_major, uint8_t version_minor, uint8_t status_info_version = kStatusInfoV0) {
-    delimiter_ = kDelimiter;
-    version_major_ = version_major;
-    version_minor_ = version_minor;
-    status_info_version_ = status_info_version;
+  void Init(uint8_t u8VerMajor, uint8_t u8VerMinor,
+            uint8_t u8StatusInfoVer = kStatusInfoV0) {
+    m_u16Delimiter = 0xffee;
+    m_u8VersionMajor = u8VerMajor;
+    m_u8VersionMinor = u8VerMinor;
+    m_u8StatusInfoVersion = u8StatusInfoVer;
   }
 
   void Print() const {
-    printf("HS_LIDAR_128CH_PRE_HEADER:\n  Delimiter:%02x, valid:%d, Ver Major: %02x, minor: %02x, StatusInfoVer:%02x\n",
-           GetDelimiter(), IsValidDelimiter(), GetVersionMajor(), GetVersionMinor(), GetStatusInfoVersion());
+    printf("HS_LIDAR_128CH_PRE_HEADER:\n");
+    printf(
+        "Delimiter:%02x, valid:%d, Ver Major: %02x, minor: %02x, "
+        "StatusInfoVer:%02x\n",
+        GetDelimiter(), IsValidDelimiter(), GetVersionMajor(),
+        GetVersionMinor(), GetStatusInfoVersion());
   }
 } __attribute__((__packed__)) HS_LIDAR_128CH_PRE_HEADER_t;
+
 typedef struct HS_LIDAR_128CH_HEADER_s {
   static const uint8_t kSequenceNum = 0x01;
   static const uint8_t kIMU = 0x02;
@@ -85,63 +89,110 @@ typedef struct HS_LIDAR_128CH_HEADER_s {
   static const uint8_t kFirstBlockLastReturn = 0x01;
   static const uint8_t kFirstBlockStrongestReturn = 0x02;
 
-  uint8_t laser_num_;
-  uint8_t block_num_;
-  uint8_t echo_count_;
-  uint8_t dist_unit_;
-  uint8_t echo_num_;
-  uint8_t status_;
+  uint8_t m_u8LaserNum;
+  uint8_t m_u8BlockNum;
+  uint8_t m_u8EchoCount;
+  uint8_t m_u8DistUnit;
+  uint8_t m_u8EchoNum;
+  uint8_t m_u8Status;
 
-  uint8_t GetLaserNum() const { return laser_num_; }
-  uint8_t GetBlockNum() const { return block_num_; }
-  double GetDistUnit() const { return dist_unit_ / 1000.f; }
-  uint8_t GetEchoCount() const { return echo_count_; }
-  uint8_t GetEchoNum() const { return echo_num_; }
-  bool HasSeqNum() const { return status_ & kSequenceNum; }
-  bool HasIMU() const { return status_ & kIMU; }
-  bool HasFuncSafety() const { return status_ & kFunctionSafety; }
-  bool HasCyberSecurity() const { return status_ & kCyberSecurity; }
-  bool HasConfidenceLevel() const { return status_ & kConfidenceLevel; }
-  bool IsFirstBlockLastReturn() const { return echo_count_ == kFirstBlockLastReturn; }
-  bool IsFirstBlockStrongestReturn() const { return echo_count_ == kFirstBlockStrongestReturn; }
-
-  uint16_t GetPacketSize() const {
-    return HS_LIDAR_128CH_PRE_HEADER_SIZE + HS_LIDAR_128CH_HEADER_SIZE +
-           (GetBlockNum() * (HS_LIDAR_128CH_AZIMUTH_SIZE + (GetLaserNum() * HS_LIDAR_128CH_UNIT_SIZE))) +
-           HS_LIDAR_128CH_BODY_CRC_SIZE +
-           HS_LIDAR_128CH_FUNC_SAFETY_SIZE +
-           HS_LIDAR_128CH_TAIL_INFO_SIZE +
-           HS_LIDAR_128CH_TAIL_SEQ_NUM_SIZE +
-           HS_LIDAR_128CH_TAIL_IMU_SIZE +
-           HS_LIDAR_128CH_TAIL_CRC_SIZE;
+  uint8_t GetLaserNum() const { return m_u8LaserNum; }
+  uint8_t GetBlockNum() const { return m_u8BlockNum; }
+  double GetDistUnit() const { return m_u8DistUnit / 1000.f; }
+  uint8_t GetEchoCount() const { return m_u8EchoCount; }
+  uint8_t GetEchoNum() const { return m_u8EchoNum; }
+  bool HasSeqNum() const { return m_u8Status & kSequenceNum; }
+  bool HasIMU() const { return m_u8Status & kIMU; }
+  bool HasFuncSafety() const { return m_u8Status & kFunctionSafety; }
+  bool HasCyberSecurity() const { return m_u8Status & kCyberSecurity; }
+  bool HasConfidenceLevel() const { return m_u8Status & kConfidenceLevel; }
+  bool IsFirstBlockLastReturn() const {
+    return m_u8EchoCount == kFirstBlockLastReturn;
   }
-
+  bool IsFirstBlockStrongestReturn() const {
+    return m_u8EchoCount == kFirstBlockStrongestReturn;
+  }
   void Print() const {
-    printf("HS_LIDAR_128CH_HEADER:\n  LaserNum:%02u, BlockNum:%02u, DistUnit:%g, EchoCnt:%02u, EchoNum:%02u, HasSeqNum:%d, HasIMU:%d, HasFuncSafety:%d, HasCyberSecurity:%d, HasConfidence:%d\n",
-           GetLaserNum(), GetBlockNum(), GetDistUnit(), GetEchoCount(), GetEchoNum(), HasSeqNum(), HasIMU(), HasFuncSafety(), HasCyberSecurity(), HasConfidenceLevel());
+    printf("HS_LIDAR_HEADER_ME_V4:\n");
+    printf(
+        "laserNum:%02u, block_num:%02u, DistUnit:%g, EchoCnt:%02u, "
+        "EchoNum:%02u, HasSeqNum:%d, HasIMU:%d, "
+        "HasFuncSafety:%d, HasCyberSecurity:%d, HasConfidence:%d\n",
+        GetLaserNum(), GetBlockNum(), GetDistUnit(), GetEchoCount(),
+        GetEchoNum(), HasSeqNum(), HasIMU(), HasFuncSafety(),
+        HasCyberSecurity(), HasConfidenceLevel());
   }
 } __attribute__((__packed__)) HS_LIDAR_128CH_HEADER_t;
 
-typedef struct HS_LIDAR_128CH_UNIT_AZIMUTH_s {
-  uint16_t azimuth_;
+typedef struct HS_LIDAR_128CH_BODY_AZIMUTH_s {
+  uint16_t m_u16Azimuth;
 
-  uint16_t GetAzimuth() const { return LittleToNative(azimuth_); }
+  uint16_t GetAzimuth() const { return LittleToNative(m_u16Azimuth); }
 
   void Print() const {
-    printf("HS_LIDAR_128CH_UNIT_AZIMUTH\n  Azimuth:%u\n", GetAzimuth());
+    printf("HS_LIDAR_BODY_AZIMUTH_ME_V4: azimuth:%u\n", GetAzimuth());
   }
-} __attribute__((__packed__)) HS_LIDAR_128CH_UNIT_AZIMUTH_t;
+} __attribute__((__packed__)) HS_LIDAR_128CH_BODY_AZIMUTH_t;
 
+typedef struct HS_LIDAR_128CH_BODY_CHN_NO_CONF_s {
+  uint16_t m_u16Distance;
+  uint8_t m_u8Reflectivity;
+
+  uint16_t GetDistance() const { return LittleToNative(m_u16Distance); }
+  uint8_t GetReflectivity() const { return m_u8Reflectivity; }
+  void Print() const {
+    printf("HS_LIDAR_BODY_CHN_UNIT_NO_CONF_ME_V4:\n");
+    printf("Dist:%u, Reflectivity: %u\n", GetDistance(), GetReflectivity());
+  }
+  void PrintMixData() const {
+    printf("HS_LIDAR_BODY_CHN_UNIT_NO_CONF_ME_V4:\n");
+  }
+} __attribute__((__packed__)) HS_LIDAR_128CH_BODY_CHN_NO_CONF_t;
+
+typedef struct HS_LIDAR_128CH_BODY_CHN_s {
+  uint16_t m_u16Distance;
+  uint8_t m_u8Reflectivity;
+  uint8_t m_u8Confidence;
+
+  uint16_t GetDistance() const { return LittleToNative(m_u16Distance); }
+  uint8_t GetReflectivity() const { return m_u8Reflectivity; }
+  uint8_t GetConfidenceLevel() const { return m_u8Confidence; }
+
+  void Print() const {
+    printf("HS_LIDAR_BODY_CHN_UNIT_ME_V4:\n");
+    printf("Dist:%u, Reflectivity: %u, confidenceLevel:%d\n", GetDistance(),
+           GetReflectivity(), GetConfidenceLevel());
+  }
+  void PrintMixData() const {
+    printf("HS_LIDAR_BODY_CHN_UNIT_ME_V4:\n");
+  }
+} __attribute__((__packed__)) HS_LIDAR_128CH_BODY_CHN_t;
 
 typedef struct HS_LIDAR_128CH_BODY_CRC_s {
-  uint32_t crc_;
+  uint32_t m_u32Crc;
 
-  uint32_t GetCrc() const { return LittleToNative(crc_); }
+  uint32_t GetCrc() const { return LittleToNative(m_u32Crc); }
 
   void Print() const {
-    printf("HS_LIDAR_128CH_BODY_CRC:\n  crc:0x%08x\n", GetCrc());
+    printf("HS_LIDAR_BODY_CRC_ME_V4:\n");
+    printf("crc:0x%08x\n", GetCrc());
   }
 } __attribute__((__packed__)) HS_LIDAR_128CH_BODY_CRC_t;
+
+typedef struct HS_LIDAR_128CH_CYBER_SECURITY_s {
+  uint8_t m_u8Signature[32];
+
+  uint8_t GetSignatureData(uint8_t index) const {
+    return m_u8Signature[index < sizeof(m_u8Signature) ? index : 0];
+  }
+
+  void Print() const {
+    printf("HS_LIDAR_CYBER_SECURITY_ME_V4:\n");
+    for (uint8_t i = 0; i < sizeof(m_u8Signature); i++)
+      printf("Signature%d:%d, ", i, GetSignatureData(i));
+    printf("\n");
+  }
+} __attribute__((__packed__)) HS_LIDAR_128CH_CYBER_SECURITY_t;
 
 typedef struct HS_LIDAR_128CH_FUNC_SAFETY_s {
   static const uint8_t kLidarStateShiftBits = 5;
@@ -155,33 +206,47 @@ typedef struct HS_LIDAR_128CH_FUNC_SAFETY_s {
   static const uint8_t kFaultIDShiftBits = 0;
   static const uint8_t kFaultIDMask = 0x0F;
 
-  uint8_t version_;
-  uint8_t status_;
-  uint8_t fault_info_;
-  uint16_t fault_code_;
-  uint8_t reserved_[8];
-  uint32_t crc_;
+  uint8_t m_u8Version;
+  uint8_t m_u8Status;
+  uint8_t m_u8FaultInfo;
+  uint16_t m_u16FaultCode;
+  uint8_t m_u8Reserved[8];
+  uint32_t m_u32Crc;
 
-  uint8_t GetVersion() const { return version_; }
+  uint8_t GetVersion() const { return m_u8Version; }
 
-  uint8_t GetLidarState() const { return (status_ >> kLidarStateShiftBits) & kLidarStateMask; }
-  bool IsHistoryFault() const { return status_ & kFaultTypeHistory; }
-  bool IsCurrentFault() const { return status_ & kFaultTypeCurrent; }
-  uint8_t GetRollingCnt() const { return (status_ >> kRollingCntShiftBits) & kRollingCntMask; }
+  uint8_t GetLidarState() const {
+    return (m_u8Status >> kLidarStateShiftBits) & kLidarStateMask;
+  }
+  bool IsHistoryFault() const { return m_u8Status & kFaultTypeHistory; }
+  bool IsCurrentFault() const { return m_u8Status & kFaultTypeCurrent; }
 
-  uint8_t GetFaultNum() const { return (fault_info_ >> kFaultNumShiftBits) & kFaultNumMask; }
-  uint8_t GetFaultID() const { return (fault_info_ >> kFaultIDShiftBits) & kFaultIDMask; }
+  uint8_t GetRollingCnt() const {
+    return (m_u8Status >> kRollingCntShiftBits) & kRollingCntMask;
+  }
 
-  uint16_t GetFaultCode() const { return LittleToNative(fault_code_); }
-  uint32_t GetCrc() const { return LittleToNative(crc_); }
+  uint8_t GetFaultNum() const {
+    return (m_u8FaultInfo >> kFaultNumShiftBits) & kFaultNumMask;
+  }
+  uint8_t GetFaultID() const {
+    return (m_u8FaultInfo >> kFaultIDShiftBits) & kFaultIDMask;
+  }
+
+  uint16_t GetFaultCode() const { return LittleToNative(m_u16FaultCode); }
+
+  uint32_t GetCrc() const { return LittleToNative(m_u32Crc); }
 
   void Print() const {
-    printf("HS_LIDAR_128CH_FUNC_SAFETY:\n  Version:%u, LidarState:%u, RollingCnt:%u, IsCurrentFault:%u, FaultNum:%u, FaultID:%u, FaultCode:0x%04x, Crc:0x%08x\n",
-           GetVersion(), GetLidarState(), GetRollingCnt(), IsCurrentFault(), GetFaultNum(), GetFaultID(), GetFaultCode(), GetCrc());
+    printf("HS_LIDAR_FUNC_SAFETY_ME_V4:\n");
+    printf(
+        "ver:%u, lidarState:%u, rollingCnt:%u, isCurrFault:%u, "
+        "faultNum:%u, faultID:%u, faultCode:0x%04x, crc:0x%08x\n",
+        GetVersion(), GetLidarState(), GetRollingCnt(), IsCurrentFault(),
+        GetFaultNum(), GetFaultID(), GetFaultCode(), GetCrc());
   }
 } __attribute__((__packed__)) HS_LIDAR_128CH_FUNC_SAFETY_t;
 
-typedef struct HS_LIDAR_128CH_TAIL_INFO_s {
+typedef struct HS_LIDAR_128CH_TAIL_s {
   // shutdown flag, bit 0
   static const uint8_t kHighPerformanceMode = 0x00;
   static const uint8_t kShutdown = 0x01;
@@ -199,56 +264,62 @@ typedef struct HS_LIDAR_128CH_TAIL_INFO_s {
   static const uint8_t kFirstSecondReturn = 0x3a;
   static const uint8_t kStongestFirstReturn = 0x3b;
 
-  ReservedInfo1_t reserved_info_1_;
-  ReservedInfo2_t reserved_info_2_;
-  ReservedInfo3_t reserved_info_3_;
-  uint16_t azimuth_state_;
-  uint8_t running_mode_;
-  uint8_t return_mode_;
-  uint16_t motor_speed_;
-  uint8_t utc_[6];
-  uint32_t timestamp_;
-  uint8_t factory_info_;
+  ReservedInfo1_t m_reservedInfo1;
+  ReservedInfo2_t m_reservedInfo2;
+  ReservedInfo3_t m_reservedInfo3;
+  uint16_t m_u16AzimuthFlag;
+  uint8_t m_u8RunningMode;
+  uint8_t m_u8ReturnMode;
+  uint16_t m_u16MotorSpeed;
+  uint8_t m_u8UTC[6];
+  uint32_t m_u32Timestamp;
+  uint8_t m_u8FactoryInfo;
 
-  uint8_t GetStsID0() const { return reserved_info_1_.GetID(); }
-  uint16_t GetData0() const { return reserved_info_1_.GetData(); }
-  uint8_t GetStsID1() const { return reserved_info_2_.GetID(); }
-  uint16_t GetData1() const { return reserved_info_2_.GetData(); }
-  uint8_t GetStsID2() const { return reserved_info_3_.GetID(); }
-  uint16_t GetData2() const { return reserved_info_3_.GetData(); }
+  uint8_t GetStsID0() const { return m_reservedInfo1.GetID(); }
+  uint16_t GetData0() const { return m_reservedInfo1.GetData(); }
+  uint8_t GetStsID1() const { return m_reservedInfo2.GetID(); }
+  uint16_t GetData1() const { return m_reservedInfo2.GetData(); }
+  uint8_t GetStsID2() const { return m_reservedInfo3.GetID(); }
+  uint16_t GetData2() const { return m_reservedInfo3.GetData(); }
 
-  uint8_t HasShutdown() const { return running_mode_ == kShutdown; }
-  uint8_t GetReturnMode() const { return return_mode_; }
-  uint16_t GetMotorSpeed() const { return LittleToNative(motor_speed_); }
-  uint32_t GetTimestamp() const { return LittleToNative(timestamp_); }
-  uint8_t GetOperationMode() const { return running_mode_ & 0x0f; }
-  uint8_t GetAngleState(int block_index) const { return (azimuth_state_ >> (2 * (7 - block_index))) & 0x03; }  // Block1(index:0)[15:14], Block2(index:1) [13:12]
+  uint8_t HasShutdown() const { return m_u8RunningMode == kShutdown; }
+  uint8_t GetReturnMode() const { return m_u8ReturnMode; }
+  uint16_t GetMotorSpeed() const { return LittleToNative(m_u16MotorSpeed); }
+  uint32_t GetTimestamp() const { return LittleToNative(m_u32Timestamp); }
+  uint8_t getOperationMode() const { return m_u8RunningMode & 0x0f; }
+  uint8_t getAngleState(int blockIndex) const {
+    return (m_u16AzimuthFlag >> (2 * (7 - blockIndex))) & 0x03;
+  }
 
-  bool IsFirstReturn() const { return return_mode_ == kFirstReturn; }
-  bool IsSecondReturn() const { return return_mode_ == kSecondReturn; }
-  bool IsThirdReturn() const { return return_mode_ == kThirdReturn; }
-  bool IsFourthReturn() const { return return_mode_ == kFourthReturn; }
-  bool IsLastReturn() const { return return_mode_ == kLastReturn; }
-  bool IsStrongestReturn() const { return return_mode_ == kStrongestReturn; }
-  bool IsDualReturn() const { return return_mode_ == kDualReturn; }
-  bool IsFirstSecondReturn() const { return return_mode_ == kFirstSecondReturn; }
-  bool IsStongestFirstReturn() const { return return_mode_ == kStongestFirstReturn; }
+  bool IsFirstReturn() const { return m_u8ReturnMode == kFirstReturn; }
+  bool IsSecondReturn() const { return m_u8ReturnMode == kSecondReturn; }
+  bool IsThirdReturn() const { return m_u8ReturnMode == kThirdReturn; }
+  bool IsFourthReturn() const { return m_u8ReturnMode == kFourthReturn; }
+  bool IsLastReturn() const { return m_u8ReturnMode == kLastReturn; }
+  bool IsStrongestReturn() const { return m_u8ReturnMode == kStrongestReturn; }
+  bool IsDualReturn() const { return m_u8ReturnMode == kDualReturn; }
+  bool IsFirstSecondReturn() const {
+    return m_u8ReturnMode == kFirstSecondReturn;
+  }
+  bool IsStongestFirstReturn() const {
+    return m_u8ReturnMode == kStongestFirstReturn;
+  }
   int64_t GetMicroLidarTimeU64() const {
-    if (utc_[0] != 0) {
+    if (m_u8UTC[0] != 0) {
       struct tm t = {0};
-      t.tm_year = utc_[0];
+      t.tm_year = m_u8UTC[0];
       if (t.tm_year < 70) {
         return 0;
       }
-      t.tm_mon = utc_[1] - 1;
-      t.tm_mday = utc_[2] + 1;
-      t.tm_hour = utc_[3];
-      t.tm_min = utc_[4];
-      t.tm_sec = utc_[5];
+      t.tm_mon = m_u8UTC[1] - 1;
+      t.tm_mday = m_u8UTC[2] + 1;
+      t.tm_hour = m_u8UTC[3];
+      t.tm_min = m_u8UTC[4];
+      t.tm_sec = m_u8UTC[5];
       t.tm_isdst = 0;
       return (mktime(&t) - timezone - 86400) * 1000000 + GetTimestamp();
     } else {
-      uint32_t utc_time_big = *(uint32_t *)(&utc_[0] + 2);
+      uint32_t utc_time_big = *(uint32_t *)(&m_u8UTC[0] + 2);
       int64_t unix_second = ((utc_time_big >> 24) & 0xff) |
                             ((utc_time_big >> 8) & 0xff00) |
                             ((utc_time_big << 8) & 0xff0000) |
@@ -256,192 +327,194 @@ typedef struct HS_LIDAR_128CH_TAIL_INFO_s {
       return unix_second * 1000000 + GetTimestamp();
     }
   }
+
   double GetTimestampPoint() const {
-    struct tm tTm = {0};
-    // UTC's year only include 0 - 99 year , which indicate 2000 to 2099.
-    // and mktime's year start from 1900 which is 0. so we need add 100 year.
-    tTm.tm_year = utc_[0] + 100;
-
-    // in case of time error
-    if (tTm.tm_year >= 200) {
-      tTm.tm_year -= 100;
+    if (m_u8UTC[0] != 0) {
+      struct tm t = {0};
+      t.tm_year = m_u8UTC[0];
+      if (t.tm_year < 70) {
+        return 0;
+      }
+      t.tm_mon = m_u8UTC[1] - 1;
+      t.tm_mday = m_u8UTC[2] + 1;
+      t.tm_hour = m_u8UTC[3];
+      t.tm_min = m_u8UTC[4];
+      t.tm_sec = m_u8UTC[5];
+      t.tm_isdst = 0;
+      return (mktime(&t) - 86400) + GetTimestamp() / 1000000.0f;
+    } else {
+      uint32_t utc_time_big = *(uint32_t *)(&m_u8UTC[0] + 2);
+      int64_t unix_second = ((utc_time_big >> 24) & 0xff) |
+                            ((utc_time_big >> 8) & 0xff00) |
+                            ((utc_time_big << 8) & 0xff0000) |
+                            ((utc_time_big << 24));
+      return unix_second + GetTimestamp() / 1000000.0f;
     }
-
-    // UTC's month start from 1, but mktime only accept month from 0.
-    tTm.tm_mon = utc_[1] - 1;
-    tTm.tm_mday = utc_[2];
-    tTm.tm_hour = utc_[3];
-    tTm.tm_min = utc_[4];
-    tTm.tm_sec = utc_[5];
-    tTm.tm_isdst = 0;
-    return mktime(&tTm) + static_cast<double>(timestamp_) / 1000000.0;
   }
 
-  uint8_t GetFactoryInfo() const { return factory_info_; }
+  uint8_t GetFactoryInfo() const { return m_u8FactoryInfo; }
   uint8_t GetUTCData(uint8_t index) const {
-    return utc_[index < sizeof(utc_) ? index : 0];
+    return m_u8UTC[index < sizeof(m_u8UTC) ? index : 0];
   }
 
   void Print() const {
-    printf("HS_LIDAR_128CH_TAIL_INFO:\n  StsID0:%d, Data0:%d, StsID1:%d, Data1:%d, StsID2:%d, Data2:%d, HasShutdown:%d, MotorSpeed:%u, Timestamp:%u, ReturnMode:0x%02x, FactoryInfo:0x%02x, utc:%u %u %u %u %u %u\n",
-           GetStsID0(), GetData0(), GetStsID1(), GetData1(), GetStsID2(), GetData2(), HasShutdown(), GetMotorSpeed(), GetTimestamp(), GetReturnMode(), GetFactoryInfo(), GetUTCData(0), GetUTCData(1), GetUTCData(2), GetUTCData(3), GetUTCData(4), GetUTCData(5));
+    printf("HS_LIDAR_TAIL_ME_V4:\n");
+    printf(
+        "sts0:%d, data0:%d, sts1:%d, data1:%d, sts2:%d, data2:%d, "
+        "shutDown:%d, motorSpeed:%u, timestamp:%u, return_mode:0x%02x, "
+        "factoryInfo:0x%02x, utc:%u %u %u %u %u %u\n",
+        GetStsID0(), GetData0(), GetStsID1(), GetData1(), GetStsID2(),
+        GetData2(), HasShutdown(), GetMotorSpeed(), GetTimestamp(),
+        GetReturnMode(), GetFactoryInfo(), GetUTCData(0), GetUTCData(1),
+        GetUTCData(2), GetUTCData(3), GetUTCData(4), GetUTCData(5));
   }
-} __attribute__((__packed__)) HS_LIDAR_128CH_TAIL_INFO_t;
+} __attribute__((__packed__)) HS_LIDAR_128CH_TAIL_t;
+
 typedef struct HS_LIDAR_128CH_TAIL_SEQ_NUM_s {
-  uint32_t seq_num_;
+  uint32_t m_u32SeqNum;
 
-  uint32_t GetSeqNum() const { return LittleToNative(seq_num_); }
-  static uint32_t GetSeqNumSize() { return sizeof(seq_num_); }
+  uint32_t GetSeqNum() const { return LittleToNative(m_u32SeqNum); }
+  static uint32_t GetSeqNumSize() { return sizeof(m_u32SeqNum); }
 
-  void CalPktLoss(uint32_t &start_seq_num, uint32_t &last_seq_num, uint32_t &loss_count, uint32_t &start_time, uint32_t &total_loss_count, uint32_t &total_start_seq_num) const {
-    if (start_seq_num == 0) {
-      loss_count = 0;
-      total_loss_count = 0;
-      start_time = GetMicroTickCount();
-      start_seq_num = seq_num_;
-      last_seq_num = seq_num_;
-      total_start_seq_num = seq_num_;
+  void CalPktLoss(uint32_t &u32StartSeqNum, uint32_t &u32LastSeqNum, uint32_t &u32LossCount,
+                  uint32_t &u32StartTime, uint32_t &u32TotalLossCount, uint32_t &u32TotalStartSeqNum) const {
+    // clean-up // bool print = false;
+    if (u32StartSeqNum == 0) {
+      u32LossCount = 0;
+      u32TotalLossCount = 0;
+      u32StartTime = GetMicroTickCount();
+      u32StartSeqNum = m_u32SeqNum;
+      u32LastSeqNum = m_u32SeqNum;
+      u32TotalStartSeqNum = m_u32SeqNum;
       return;
     }
-    if (seq_num_ - last_seq_num > 1) {
-      loss_count += (seq_num_ - last_seq_num - 1);
-      total_loss_count += (seq_num_ - last_seq_num - 1);
+    if (m_u32SeqNum - u32LastSeqNum > 1) {
+      u32LossCount += (m_u32SeqNum - u32LastSeqNum - 1);
+      u32TotalLossCount += (m_u32SeqNum - u32LastSeqNum - 1);
+      // clean-up // print = true;
+      // if (m_u32SeqNum - u32LastSeqNum - 1 > 1000)
+      // printf("%d,  %u, %u\n", m_u32SeqNum - u32LastSeqNum - 1, u32LastSeqNum,
+      // m_u32SeqNum);
     }
 
     // print log every 1s
-    if (GetMicroTickCount() - start_time >= 1 * 1000 * 1000) {
-      printf("pkt loss freq: %u/%u\n", loss_count,
-             seq_num_ - start_seq_num);
-      loss_count = 0;
-      start_time = GetMicroTickCount();
-      start_seq_num = seq_num_;
+    if (GetMicroTickCount() - u32StartTime >= 1 * 1000 * 1000) {
+      printf("pkt loss freq: %u/%u\n", u32LossCount,
+             m_u32SeqNum - u32StartSeqNum);
+      u32LossCount = 0;
+      u32StartTime = GetMicroTickCount();
+      u32StartSeqNum = m_u32SeqNum;
     }
 
-    last_seq_num = seq_num_;
+    u32LastSeqNum = m_u32SeqNum;
   }
 
-  void CalPktLoss(uint32_t &start_seq_num, uint32_t &last_seq_num, uint32_t &loss_count, uint32_t &start_time) const {
-    if (seq_num_ - last_seq_num > 1) {
-      loss_count += (seq_num_ - last_seq_num - 1);
+  void CalPktLoss(uint32_t &u32StartSeqNum, uint32_t &u32LastSeqNum, uint32_t &u32LossCount, uint32_t &u32StartTime) const {
+    // clean-up // bool print = false;
+    if (m_u32SeqNum - u32LastSeqNum > 1) {
+      u32LossCount += (m_u32SeqNum - u32LastSeqNum - 1);
+      // clean-up // print = true;
+      // if (m_u32SeqNum - u32LastSeqNum - 1 > 1000)
+      // printf("%d,  %u, %u\n", m_u32SeqNum - u32LastSeqNum - 1, u32LastSeqNum,
+      // m_u32SeqNum);
     }
 
     // print log every 1s
-    if (GetMicroTickCount() - start_time >= 1 * 1000 * 1000) {
-      printf("pkt loss freq: %u/%u\n", loss_count, seq_num_ - start_seq_num);
-      loss_count = 0;
-      start_time = GetMicroTickCount();
-      start_seq_num = seq_num_;
+    if (GetMicroTickCount() - u32StartTime >= 1 * 1000 * 1000) {
+      printf("pkt loss freq: %u/%u\n", u32LossCount,
+             m_u32SeqNum - u32StartSeqNum);
+      u32LossCount = 0;
+      u32StartTime = GetMicroTickCount();
+      u32StartSeqNum = m_u32SeqNum;
     }
 
-    last_seq_num = seq_num_;
+    u32LastSeqNum = m_u32SeqNum;
   }
 
   void Print() const {
-    printf("HS_LIDAR_128CH_TAIL_SEQ_NUM:\n  seqNum: %u\n", GetSeqNum());
+    printf("HS_LIDAR_TAIL_SEQ_NUM_ME_V4:\n");
+    printf("seqNum: %u\n", GetSeqNum());
   }
 } __attribute__((__packed__)) HS_LIDAR_128CH_TAIL_SEQ_NUM_t;
+
 typedef struct HS_LIDAR_128CH_TAIL_IMU_s {
-  int16_t imu_temperature_;
-  uint16_t imu_accel_unit_;
-  uint16_t imt_ang_vel_unit_;
-  uint32_t imu_timestamp_;
-  int16_t imu_x_accel_;
-  int16_t imu_y_accel_;
-  int16_t imu_z_accel_;
-  int16_t imu_x_ang_vel_;
-  int16_t imu_y_ang_vel_;
-  int16_t imu_z_ang_vel_;
+  int16_t m_i16IMUTemperature;
+  uint16_t m_u16IMUAccelUnit;
+  uint16_t m_u16IMUAngVelUnit;
+  uint32_t m_u32IMUTimeStamp;
+  int16_t m_i16IMUXAccel;
+  int16_t m_i16IMUYAccel;
+  int16_t m_i16IMUZAccel;
+  int16_t m_i16IMUXAngVel;
+  int16_t m_i16IMUYAngVel;
+  int16_t m_i16IMUZAngVel;
 
   int16_t GetIMUTemperature() const {
-    return LittleToNative(imu_temperature_);
+    return LittleToNative(m_i16IMUTemperature);
   }
   double GetIMUAccelUnit() const {
-    return LittleToNative(imu_accel_unit_) / 1000.f;
+    return LittleToNative(m_u16IMUAccelUnit) / 1000.f;
   }
   double GetIMUAngVelUnit() const {
-    return LittleToNative(imt_ang_vel_unit_) / 100.f;
+    return LittleToNative(m_u16IMUAngVelUnit) / 100.f;
   }
   uint32_t GetIMUTimestamp() const {
-    return LittleToNative(imu_timestamp_);
+    return LittleToNative(m_u32IMUTimeStamp);
   }
   double GetIMUXAccel() const {
-    return LittleToNative(imu_x_accel_) * GetIMUAccelUnit();
+    return LittleToNative(m_i16IMUXAccel) * GetIMUAccelUnit();
   }
   double GetIMUYAccel() const {
-    return LittleToNative(imu_y_accel_) * GetIMUAccelUnit();
+    return LittleToNative(m_i16IMUYAccel) * GetIMUAccelUnit();
   }
   double GetIMUZAccel() const {
-    return LittleToNative(imu_z_accel_) * GetIMUAccelUnit();
+    return LittleToNative(m_i16IMUZAccel) * GetIMUAccelUnit();
   }
   double GetIMUXAngVel() const {
-    return LittleToNative(imu_x_ang_vel_) * GetIMUAngVelUnit();
+    return LittleToNative(m_i16IMUXAngVel) * GetIMUAngVelUnit();
   }
   double GetIMUYAngVel() const {
-    return LittleToNative(imu_y_ang_vel_) * GetIMUAngVelUnit();
+    return LittleToNative(m_i16IMUYAngVel) * GetIMUAngVelUnit();
   }
   double GetIMUZAngVel() const {
-    return LittleToNative(imu_z_ang_vel_) * GetIMUAngVelUnit();
+    return LittleToNative(m_i16IMUZAngVel) * GetIMUAngVelUnit();
   }
 
   void Print() const {
+    printf("HS_LIDAR_TAIL_IMU_ME_V4:\n");
     printf(
-        "HS_LIDAR_128CH_TAIL_IMU:\n  Temperature:%u, AccelUnit:%f, AngVelUnit:%f, Timestamp:%u, XAccel:%f, YAccel:%f, ZAccel:%f, XAngVel:%f, YAngVel:%f, ZAngVel:%f\n",
-        GetIMUTemperature(), GetIMUAccelUnit(), GetIMUAngVelUnit(), GetIMUTimestamp(), GetIMUXAccel(), GetIMUYAccel(), GetIMUZAccel(), GetIMUXAngVel(), GetIMUYAngVel(), GetIMUZAngVel());
+        "Temp:%u, AccelUnit:%f, AngVelUnit:%f, TimeStamp:%u, XAccel:%f, "
+        "YAccel:%f, ZAccel:%f, XAngVel:%f, YAngVel:%f, ZAngVel:%f\n",
+        GetIMUTemperature(), GetIMUAccelUnit(), GetIMUAngVelUnit(),
+        GetIMUTimestamp(), GetIMUXAccel(), GetIMUYAccel(), GetIMUZAccel(),
+        GetIMUXAngVel(), GetIMUYAngVel(), GetIMUZAngVel());
   }
 } __attribute__((__packed__)) HS_LIDAR_128CH_TAIL_IMU_t;
-typedef struct HS_LIDAR_128CH_TAIL_CRC_s {
-  uint32_t crc_;
 
-  uint32_t GetCrc() const { return LittleToNative(crc_); }
+typedef struct HS_LIDAR_128CH_TAIL_CRC_s {
+  uint32_t m_u32Crc;
+
+  uint32_t GetCrc() const { return LittleToNative(m_u32Crc); }
 
   void Print() const {
-    printf("HS_LIDAR_128CH_TAIL_CRC:\n  crc:0x%08x\n", GetCrc());
+    printf("HS_LIDAR_TAIL_CRC_ME_V4:\n");
+    printf("crc:0x%08x\n", GetCrc());
   }
 } __attribute__((__packed__)) HS_LIDAR_128CH_TAIL_CRC_t;
 
-typedef struct HS_LIDAR_128CH_UNIT_BLOCK_s {
- private:
+typedef struct HS_LIDAR_128CH_UNIT_s {
   double distance_;
-  uint8_t reflectivity_;
-
- public:
-  void set_distance(const double distance) { distance_ = distance; }
-  double distance() const { return distance_; }
-
-  void set_reflectivity(const uint8_t reflectivity) { reflectivity_ = reflectivity; }
-  uint8_t reflectivity() const { return reflectivity_; }
-} __attribute__((__packed__)) HS_LIDAR_128CH_UNIT_BLOCK_t;
-typedef struct HS_LIDAR_128CH_BLOCK_s {
- private:
+  uint16_t intensity_;
   uint16_t azimuth_;
-  HS_LIDAR_128CH_UNIT_BLOCK_t units_[HS_LIDAR_128CH_UNIT_NUM];
+} HS_LIDAR_128CH_UNIT_t;
 
- public:
-  void set_azimuth(const uint16_t azimuth) { azimuth_ = azimuth; }
-  uint16_t azimuth() const { return azimuth_; }
-
-  HS_LIDAR_128CH_UNIT_BLOCK_t* unit(const uint8_t unit_index) { return &units_[unit_index]; }
-
-} __attribute__((__packed__)) HS_LIDAR_128CH_BLOCK_t;
+typedef struct HS_LIDAR_128CH_BLOCK_s {
+  uint8_t azimuth_state_;
+  uint16_t block_azimuth_;
+  HS_LIDAR_128CH_UNIT_t units_[HS_LIDAR_128CH_UNIT_NUM];
+} HS_LIDAR_128CH_BLOCK_t;
 
 typedef struct HS_LIDAR_128CH_PACKET_s {
- private:
-  // return mode
-  static const uint8_t kFirstReturn = 0x33;
-  static const uint8_t kSecondReturn = 0x34;
-  static const uint8_t kThirdReturn = 0x35;
-  static const uint8_t kFourthReturn = 0x36;
-  static const uint8_t kStrongestReturn = 0x37;
-  static const uint8_t kLastReturn = 0x38;
-  static const uint8_t kDualReturn = 0x39;
-  static const uint8_t kFirstSecondReturn = 0x3a;
-  static const uint8_t kStongestFirstReturn = 0x3b;
-
-  // operation mode
-  static const uint8_t kHighResolution = 0;
-  static const uint8_t kStandard = 2;
-  static const uint8_t kEnergySaving = 3;
-
   uint8_t laser_num_;
   uint8_t block_num_;
   double dist_unit_;
@@ -452,64 +525,10 @@ typedef struct HS_LIDAR_128CH_PACKET_s {
   int64_t timestamp_;
   uint8_t return_mode_;
   uint8_t operation_mode_;
-  uint8_t angle_state_[HS_LIDAR_128CH_BLOCK_NUM];
 
-  int64_t timestamp_point_;
+  double timestamp_point_;
 
- public:
-  void set_laser_num(const uint8_t laser_num) { laser_num_ = laser_num; }
-  uint8_t laser_num() const { return laser_num_; }
-  void set_block_num(const uint8_t block_num) { block_num_ = block_num; }
-  uint8_t block_num() const { return block_num_; }
-  void set_dist_unit(const double dist_unit) { dist_unit_ = dist_unit; }
-  double dist_unit() const { return dist_unit_; }
-
-  void set_motor_speed(const uint16_t motor_speed) { motor_speed_ = motor_speed; }
-  uint16_t motor_speed() const { return motor_speed_; }
-  void set_timestamp(const int64_t timestamp) { timestamp_ = timestamp; }
-  int64_t timestamp() const { return timestamp_; }
-
-  void set_return_mode(const uint8_t return_mode) { return_mode_ = return_mode; }
-  uint8_t return_mode() const { return return_mode_; }
-
-  void set_operation_mode(const uint8_t operation_mode) { operation_mode_ = operation_mode; }
-  uint8_t operation_mode() const { return operation_mode_; }
-
-  void set_angle_state(const size_t block_index, const uint8_t angle_state) {
-    if (block_index >= HS_LIDAR_128CH_BLOCK_NUM) {
-      // error
-      return;
-    }
-    angle_state_[block_index] = angle_state;
-  }
-  uint8_t angle_state(int block_index) const {
-    if (block_index >= HS_LIDAR_128CH_BLOCK_NUM) {
-      // error
-      return 0;
-    }
-    return angle_state_[block_index];
-  }
-
-  HS_LIDAR_128CH_BLOCK_t* block(const uint8_t block_index) { return &blocks_[block_index]; }
-
-  void set_timestamp_point(double timestamp_point) { timestamp_point_ = timestamp_point;}
-double timestamp_point() const {return timestamp_point_;}
-
-  bool IsFirstReturn() const { return return_mode_ == kFirstReturn; }
-  bool IsSecondReturn() const { return return_mode_ == kSecondReturn; }
-  bool IsThirdReturn() const { return return_mode_ == kThirdReturn; }
-  bool IsFourthReturn() const { return return_mode_ == kFourthReturn; }
-  bool IsLastReturn() const { return return_mode_ == kLastReturn; }
-  bool IsStrongestReturn() const { return return_mode_ == kStrongestReturn; }
-  bool IsDualReturn() const { return return_mode_ == kDualReturn; }
-  bool IsFirstSecondReturn() const { return return_mode_ == kFirstSecondReturn; }
-  bool IsStongestFirstReturn() const { return return_mode_ == kStongestFirstReturn; }
-
-  bool IsHighResolution() const { return operation_mode_ == kHighResolution; }
-  bool IsStandard() const { return operation_mode_ == kStandard; }
-  bool IsEnergySaving() const { return operation_mode_ == kEnergySaving; }
-
-} __attribute__((__packed__)) HS_LIDAR_128CH_PACKET_t;
+} HS_LIDAR_128CH_PACKET_t;
 
 const float pandar_128ch_elev_angle_map[] = {
     14.436f, 13.535f, 13.081786f, 12.624f, 12.165246f, 11.702f, 11.238522f, 10.771f,
@@ -546,5 +565,36 @@ const float pandar_128ch_horizatal_azimuth_offset_map[] = {
     1.133088f, 3.406f, 1.135163f, 3.41f, 1.137272f, 3.416f, 1.139412f, -1.142319f,
     1.141584f, -1.143128f, -3.425708f, -1.143867f, -3.429329f, -1.144538f, -3.432841f, -1.14514f,
     -3.436242f, -1.145675f, -3.439533f, -1.146145f, -3.442714f, -1.146549f, -3.445786f, -3.448749f};
+
+static const size_t kSizeOfLidar128chPreHeader = sizeof(HS_LIDAR_128CH_PRE_HEADER_t);
+static const size_t kSizeOfLidar128chHeader = sizeof(HS_LIDAR_128CH_HEADER_t);
+static const size_t kSizeOfLidar128chBodyAzimuth = sizeof(HS_LIDAR_128CH_BODY_AZIMUTH_t);
+static const size_t kSizeOfLidar128chBodyCHNNoConf = sizeof(HS_LIDAR_128CH_BODY_CHN_NO_CONF_t);
+static const size_t kSizeOfLidar128chBodyCHN = sizeof(HS_LIDAR_128CH_BODY_CHN_t);
+static const size_t kSizeOfLidar128chBodyCRC = sizeof(HS_LIDAR_128CH_BODY_CRC_t);
+static const size_t kSizeOfLidar128chCyberSecurity = sizeof(HS_LIDAR_128CH_CYBER_SECURITY_t);
+static const size_t kSizeOfLidar128chFuncSafety = sizeof(HS_LIDAR_128CH_FUNC_SAFETY_t);
+static const size_t kSizeOfLidar128chTail = sizeof(HS_LIDAR_128CH_TAIL_t);
+static const size_t kSizeOfLidar128chTailSeqNum = sizeof(HS_LIDAR_128CH_TAIL_SEQ_NUM_t);
+static const size_t kSizeOfLidar128chTailIMU = sizeof(HS_LIDAR_128CH_TAIL_IMU_t);
+static const size_t kSizeOfLidar128chTailCRC = sizeof(HS_LIDAR_128CH_TAIL_CRC_t);
+
+static const size_t GetSizeOfLidar128chBodyCHN(const bool has_conf) { return has_conf ? kSizeOfLidar128chBodyCHN : kSizeOfLidar128chBodyCHNNoConf; }
+static const size_t GetSizeOfLidar128chBody(const uint8_t block_num, const uint8_t laser_num, const bool has_conf) {
+  return block_num * (kSizeOfLidar128chBodyAzimuth + (laser_num * GetSizeOfLidar128chBodyCHN(has_conf))) + kSizeOfLidar128chBodyCRC;
+}
+
+#define HS_LIDAR_128CH_PACKET_SIZE (kSizeOfLidar128chPreHeader + kSizeOfLidar128chHeader + GetSizeOfLidar128chBody(HS_LIDAR_128CH_BLOCK_NUM, HS_LIDAR_128CH_UNIT_NUM, false) + kSizeOfLidar128chFuncSafety + kSizeOfLidar128chTail + kSizeOfLidar128chTailSeqNum + kSizeOfLidar128chTailIMU + kSizeOfLidar128chTailCRC)
+#define HS_LIDAR_128CH_NOCONF_PACKET_SIZE (kSizeOfLidar128chPreHeader + kSizeOfLidar128chHeader + GetSizeOfLidar128chBody(HS_LIDAR_128CH_BLOCK_NUM, HS_LIDAR_128CH_UNIT_NUM, false) + kSizeOfLidar128chFuncSafety + kSizeOfLidar128chTail + kSizeOfLidar128chTailSeqNum + kSizeOfLidar128chTailIMU + kSizeOfLidar128chTailCRC)
+
+// Has ConfidenceLevel
+static const size_t kSizeOfLidar128chPacketConf = kSizeOfLidar128chPreHeader + kSizeOfLidar128chHeader +
+                                                  GetSizeOfLidar128chBody(HS_LIDAR_128CH_BLOCK_NUM, HS_LIDAR_128CH_UNIT_NUM, true) +
+                                                  kSizeOfLidar128chFuncSafety + kSizeOfLidar128chTail + kSizeOfLidar128chTailSeqNum +
+                                                  kSizeOfLidar128chTailIMU + kSizeOfLidar128chTailCRC;
+static const size_t kSizeOfLidar128chPacketNoConf = kSizeOfLidar128chPreHeader + kSizeOfLidar128chHeader +
+                                                    GetSizeOfLidar128chBody(HS_LIDAR_128CH_BLOCK_NUM, HS_LIDAR_128CH_UNIT_NUM, false) +
+                                                    kSizeOfLidar128chFuncSafety + kSizeOfLidar128chTail + kSizeOfLidar128chTailSeqNum +
+                                                    kSizeOfLidar128chTailIMU + kSizeOfLidar128chTailCRC;
 
 #endif  // SV_HESAI_LIDAR_PACKET_PANDAR_128CH_H_
