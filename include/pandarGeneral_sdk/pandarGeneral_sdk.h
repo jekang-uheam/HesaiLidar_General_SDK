@@ -26,7 +26,8 @@
 #include <string>
 #include <vector>
 
-#include "pandarGeneral/pandarGeneral.h"
+// #include "pandarGeneral/pandarGeneral.h"
+#include "pandarGeneral/pandarGeneral_internal.h"
 #include "pandarGeneral/point_types.h"
 
 // class PandarGeneralSDK_Internal;
@@ -92,15 +93,16 @@ class PandarGeneralSDK {
   int getMinorVersion();
 
  private:
-  PandarGeneral *pandarGeneral_;
+  // PandarGeneral *pandarGeneral_;
+  PandarGeneral_Internal *pandarGeneral_;
   void *tcp_command_client_;
   boost::thread *get_calibration_thr_;
   bool enable_get_calibration_thr_;
   bool got_lidar_calibration_;
   std::string correction_content_;
   std::string correction_file_path_;
-    std::string firetimes_content_;
-std::string firetimes_file_path_;
+  std::string firetimes_content_;
+  std::string firetimes_file_path_;
 };
 
 #endif  // INCLUDE_PANDAR40P_SDK_PANDAR40P_SDK_H_

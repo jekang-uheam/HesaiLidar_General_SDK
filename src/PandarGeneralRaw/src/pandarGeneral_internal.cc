@@ -876,6 +876,11 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
     m_PacketsBuffer.moveIterCalc();
     m_dPktTimestamp = packet.stamp;
 
+    if(receive_packet_size_ != packet.size) {
+receive_packet_size_ = packet.size;
+printf("[CHECK] received packet size : %d\n", packet.size);
+}
+
     if (packet.size == HS_LIDAR_64CH_PACKET_SIZE) {
       HS_LIDAR_64CH_PACKET_t *pkt = new HS_LIDAR_64CH_PACKET_t();
       ret = ParseSV64Data(pkt, packet.data, packet.size);
@@ -940,9 +945,8 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
 
       int azimuth_gap = 0;      /* To do */
       double timestamp_gap = 0; /* To do */
+      uint16_t block_azimuth = pkt.blocks_[1].block_azimuth_;
       for (uint8_t i = 0; i < pkt.block_num_; ++i) {
-        uint16_t block_azimuth = pkt.blocks_[i].block_azimuth_;
-
         if (last_azimuth_ > block_azimuth) {
           azimuth_gap = static_cast<int>(block_azimuth) + (MAX_AZIMUTH_DEGREE_NUM - static_cast<int>(last_azimuth_));
         } else {
@@ -2130,7 +2134,7 @@ void PandarGeneral_Internal::EmitBackMessege(uint8_t chLaserNumber, boost::share
         cld->push_back(m_vPointCloudList[i][j]);
       }
     }
-    printf("m_vPointCloudList : %u\n", cld->size());
+    printf("m_vPointCloudList : %lu\n", cld->size());
   } else {
     cld->points.assign(m_vPointCloud.begin(), m_vPointCloud.begin() + m_iPointCloudIndex);
     cld->width = (uint32_t)cld->points.size();
@@ -2447,29 +2451,30 @@ int PandarGeneral_Internal::ParseSV128Data(HS_LIDAR_128CH_PACKET_t *output, cons
   const HS_LIDAR_128CH_HEADER_t *header = reinterpret_cast<const HS_LIDAR_128CH_HEADER_t *>(
       buffer + kSizeOfLidar128chPreHeader);
 
+
   size_t body_size = GetSizeOfLidar128chBody(header->GetBlockNum(), header->GetLaserNum(), header->HasConfidenceLevel());
   size_t safety_size = 0;
 
   if (header->HasFuncSafety()) {
     const HS_LIDAR_128CH_FUNC_SAFETY_t *func_safety = reinterpret_cast<const HS_LIDAR_128CH_FUNC_SAFETY_t *>(
-        header + body_size);
+        (header + kSizeOfLidar128chHeader) + body_size);
     safety_size = kSizeOfLidar128chFuncSafety;
   } else {
   }
 
   const HS_LIDAR_128CH_TAIL_t *tail = reinterpret_cast<const HS_LIDAR_128CH_TAIL_t *>(
-      header + body_size + safety_size);
+      (header + kSizeOfLidar128chHeader) + body_size + safety_size);
 
   size_t seq_num_size = 0;
   if (header->HasSeqNum()) {
     const HS_LIDAR_128CH_TAIL_SEQ_NUM_t *tail_seq_num = reinterpret_cast<const HS_LIDAR_128CH_TAIL_SEQ_NUM_t *>(
-        header + body_size + safety_size + kSizeOfLidar128chTail);
+        tail + kSizeOfLidar128chTail);
     seq_num_size = kSizeOfLidar128chTailSeqNum;
   }
 
   if (header->HasIMU()) {
     const HS_LIDAR_128CH_TAIL_IMU_t *tail_imu = reinterpret_cast<const HS_LIDAR_128CH_TAIL_IMU_t *>(
-        header + body_size + safety_size + kSizeOfLidar128chTail + seq_num_size);
+        tail + kSizeOfLidar128chTail + seq_num_size);
   }
 
   output->laser_num_ = header->GetLaserNum();
@@ -2487,6 +2492,7 @@ int PandarGeneral_Internal::ParseSV128Data(HS_LIDAR_128CH_PACKET_t *output, cons
       header + kSizeOfLidar128chHeader);
 
   float elevation = 0;
+  uint16_t block_azimuth;
   for (uint8_t i = 0; i < header->GetBlockNum(); ++i) {
     output->blocks_[i].block_azimuth_ = azimuth->GetAzimuth();
     if (header->HasConfidenceLevel()) {
@@ -2504,8 +2510,6 @@ int PandarGeneral_Internal::ParseSV128Data(HS_LIDAR_128CH_PACKET_t *output, cons
         output->blocks_[i].units_[j].distance_ = chn->GetDistance();
         ++chn;
       }
-
-      printf("1 - Block %02x Unit %d, Azimuth :  %u\n", azimuth->GetAzimuth());
 
       // next azimuth
       azimuth = reinterpret_cast<const HS_LIDAR_128CH_BODY_AZIMUTH_t *>(
@@ -2525,8 +2529,6 @@ int PandarGeneral_Internal::ParseSV128Data(HS_LIDAR_128CH_PACKET_t *output, cons
         output->blocks_[i].units_[j].distance_ = chn_no_conf->GetDistance();
         ++chn_no_conf;
       }
-
-      printf("2 - Block %02x Azimuth: %u\n", i, azimuth->GetAzimuth());
 
       // next azimuth
       azimuth = reinterpret_cast<const HS_LIDAR_128CH_BODY_AZIMUTH_t *>(

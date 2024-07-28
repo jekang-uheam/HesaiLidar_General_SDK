@@ -653,6 +653,8 @@ class PandarGeneral_Internal {
   std::vector<std::vector<SVPoint_t>> m_vPointCloudList;
   std::vector<SVPoint_t> m_vPointCloud;
   double section_distance_;
+int receive_packet_size_ =0;
+  size_t packet_offsets_[7] = {0,};
 };
 
 #endif  // SRC_PANDARGENERAL_INTERNAL_H_
