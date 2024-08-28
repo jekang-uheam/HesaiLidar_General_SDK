@@ -184,3 +184,9 @@ int PandarGeneralSDK::getMinorVersion() {
   }
   return 0;
 }
+
+void PandarGeneralSDK::SetPacketCallback(boost::function<void(const PandarFrame_t &, double)> packet_callback) {
+  if (pandarGeneral_) {
+    return pandarGeneral_->SetPacketCallback(packet_callback);
+  }
+}&

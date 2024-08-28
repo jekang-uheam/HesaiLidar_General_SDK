@@ -496,6 +496,8 @@ class PandarGeneral_Internal {
    */
   int popAlgorithmData(PandarPacket *packet);
 
+  void SetPacketCallback(boost::function<void(const PandarFrame_t &, double)> packet_callback);
+
  private:
   void Init();
   void RecvTask();
@@ -555,6 +557,7 @@ class PandarGeneral_Internal {
   boost::function<void(boost::shared_ptr<SVPointCloud> cld, double timestamp)>
       pcl_callback_;
   boost::function<void(double timestamp)> gps_callback_;
+  boost::function<void(const PandarFrame_t &frame, double timestamp)> packet_callback_;
 
   float sin_lookup_table_[ROTATION_MAX_UNITS];
   float cos_lookup_table_[ROTATION_MAX_UNITS];
@@ -621,6 +624,7 @@ class PandarGeneral_Internal {
   int m_iPointCloudIndex;
   std::vector<std::vector<SVPoint> > m_vPointCloudList;
   std::vector<SVPoint> m_vPointCloud;
+  PandarFrame_t packets_;
 };
 
 #endif  // SRC_PANDARGENERAL_INTERNAL_H_

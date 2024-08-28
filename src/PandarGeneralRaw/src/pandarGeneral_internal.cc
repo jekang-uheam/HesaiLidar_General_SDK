@@ -883,6 +883,7 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
         last_azimuth_ = pkt.blocks[i].azimuth;
         last_timestamp_ = pkt.timestamp_point;
       }
+      packets_.emplace_back(packet);
     } else if (HS_LIDAR_L20_PACKET_SIZE == packet.size) {
       HS_LIDAR_L20_Packet pkt;
       ret = ParseL20Data(&pkt, packet.data, packet.size);
@@ -1932,6 +1933,9 @@ void PandarGeneral_Internal::EmitBackMessege(char chLaserNumber, boost::shared_p
     m_iPointCloudIndex = 0;
   }
   pcl_callback_(cld, cld->points[0].timestamp);
+  if (packet_callback_) {
+    packet_callback_(packets_, cld->points[0].timestamp);
+  }
   if (pcl_type_) {
     for (int i = 0; i < chLaserNumber; i++) {
       m_vPointCloudList[i].clear();
@@ -1941,6 +1945,7 @@ void PandarGeneral_Internal::EmitBackMessege(char chLaserNumber, boost::shared_p
       cld->height = 1;
     }
   }
+  packets_.clear();
 }
 
 void PandarGeneral_Internal::recvAlgorithmPacket() {
@@ -2038,6 +2043,10 @@ int PandarGeneral_Internal::popAlgorithmData(PandarPacket *packet) {
   m_listAlgorithmPacket.pop_front();
   pthread_mutex_unlock(&m_mutexAlgorithmListLock);
   return 0;
+}
+
+void PandarGeneral_Internal::SetPacketCallback(boost::function<void(const PandarFrame_t &, double)> packet_callback) {
+  packet_callback_ = packet_callback;
 }
 
 int PandarGeneral_Internal::DecodeUdpData(unsigned char *app_data_buff, int data_length, HS_Object3D_Object_List *Object_Recv_Sample) {

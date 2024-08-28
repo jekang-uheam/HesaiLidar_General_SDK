@@ -31,6 +31,7 @@
 
 // class PandarGeneralSDK_Internal;
 
+
 class PandarGeneralSDK {
  public:
   /**
@@ -79,6 +80,7 @@ class PandarGeneralSDK {
   void GetCalibrationFromDevice();
   void Start();
   void Stop();
+  void SetPacketCallback(boost::function<void(const PandarFrame_t &, double)> packet_callback);
 
   /** @brief get major version.
    * @Return   ： major version

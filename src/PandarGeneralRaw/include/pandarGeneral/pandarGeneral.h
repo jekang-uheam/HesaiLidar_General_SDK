@@ -104,6 +104,8 @@ class PandarGeneral {
   bool GetCorrectionFileFlag();
   void SetCorrectionFileFlag(bool flag);
 
+  void SetPacketCallback(boost::function<void(const PandarFrame_t &, double)> packet_callback);
+
  private:
   PandarGeneral_Internal *internal_;
 };
